@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getToken, onMessage } from "firebase/messaging";
 import { getFirebaseMessaging } from "@/lib/firebase/config";
 
 export interface NotificationPayload {
@@ -49,6 +48,8 @@ export const useNotification = () => {
         await navigator.serviceWorker.ready;
       }
 
+      // Dynamically import getToken to avoid build issues
+      const { getToken } = await import("firebase/messaging");
       const currentToken = await getToken(messaging, { vapidKey });
 
       if (currentToken) {
@@ -119,6 +120,9 @@ export const useNotification = () => {
     try {
       const messaging = await getFirebaseMessaging();
       if (!messaging) return;
+
+      // Dynamically import onMessage to avoid build issues
+      const { onMessage } = await import("firebase/messaging");
 
       // Handle foreground messages
       onMessage(messaging, (payload: NotificationPayload) => {

@@ -1,5 +1,4 @@
-import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { getMessaging, Messaging, isSupported } from 'firebase/messaging';
+import { initializeApp, getApps, FirebaseApp } from "firebase/app";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -12,7 +11,7 @@ const firebaseConfig = {
 };
 
 let app: FirebaseApp;
-let messaging: Messaging | null = null;
+let messaging: any = null;
 
 // Initialize Firebase
 export const getFirebaseApp = () => {
@@ -26,25 +25,29 @@ export const getFirebaseApp = () => {
 
 // Initialize Firebase Cloud Messaging
 export const getFirebaseMessaging = async () => {
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     return null;
   }
 
   try {
-    const isSupportedBrowser = await isSupported();
+    // Dynamically import firebase/messaging only in the browser
+    const messagingLib = await import("firebase/messaging");
+    // @ts-ignore - Firebase messaging dynamic import type issue
+    const { getMessaging: getMsg, isSupported: isSupportedFn } = messagingLib;
+
+    const isSupportedBrowser = await isSupportedFn();
     if (!isSupportedBrowser) {
-      console.warn('Firebase Messaging is not supported in this browser');
+      console.warn("Firebase Messaging is not supported in this browser");
       return null;
     }
 
     if (!messaging) {
       const app = getFirebaseApp();
-      messaging = getMessaging(app);
+      messaging = getMsg(app);
     }
     return messaging;
   } catch (error) {
-    console.error('Error initializing Firebase Messaging:', error);
+    console.error("Error initializing Firebase Messaging:", error);
     return null;
   }
 };
-
